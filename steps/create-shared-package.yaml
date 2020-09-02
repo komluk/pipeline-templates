@@ -1,0 +1,16 @@
+parameters:
+  - name: clientProjectPath
+    type: string
+
+  - name: contractsProjectPath
+    type: string
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: "Create shared NuGet"
+    inputs:
+      command: pack
+      feedsToUse: config
+      nugetConfigPath: NuGet.Config
+      packagesToPack: ${{ parameters.clientProjectPath }};${{ parameters.contractsProjectPath }}
+      packDirectory: "$(Build.ArtifactStagingDirectory)/NuGetPackages"

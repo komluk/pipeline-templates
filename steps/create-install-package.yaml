@@ -1,0 +1,27 @@
+parameters:
+  - name: projectName
+    type: string
+
+  - name: packageId
+    type: string
+
+  - name: packageTitle
+    type: string
+
+  - name: packageDescription
+    type: string
+
+  - name: buildConfiguration
+    type: string
+    default: release
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: "Publish"
+    inputs:
+      command: publish
+      publishWebProjects: false
+      arguments: ' -c ${{ parameters.buildConfiguration }} -o $(Build.SourcesDirectory)\Website\${{ parameters.projectName }} /p:Version=$(Build.BuildNumber) /p:PackageVersion=$(Build.BuildNumber) --runtime win7-x86'
+      zipAfterPublish: false
+      modifyOutputPath: false
+      workingDirectory: ${{ parameters.projectName }}

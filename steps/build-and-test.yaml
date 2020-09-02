@@ -1,0 +1,55 @@
+parameters:
+  - name: sonarProjectName
+    type: string
+
+  - name: slnFileName
+    type: string
+
+  - name: buildPlatform
+    default: any cpu
+
+  - name: buildConfiguration
+    default: release
+
+  - name: solutionPath
+    default: "**/*.sln"
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: "dotnet restore"
+    inputs:
+      command: restore
+      feedsToUse: config
+      nugetConfigPath: NuGet.Config
+
+  - task: SonarQubePrepare@4
+    displayName: "Prepare analysis on SonarQube"
+    inputs:
+      SonarQube: "SonarQube - komluk"
+      projectKey: ${{ parameters.sonarProjectName }}
+      projectName: ${{ parameters.sonarProjectName }}
+      projectVersion: "$(Build.BuildNumber)"
+      extraProperties: |
+        # Additional properties that will be passed to the scanner, 
+        # Put one key=value per line, example:
+        # sonar.exclusions=**/*.bin
+        sonar.cs.vscoveragexml.reportsPaths=**/*.coveragexml
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      command: build
+      solution: "${{ parameters.solutionPath }}"
+
+  - task: DotNetCoreCLI@2
+    displayName: "dotnet test"
+    inputs:
+      command: test
+      arguments: '$(Build.SourcesDirectory)\${{ parameters.slnFileName }} --results-directory $(Agent.BuildDirectory)\TestResults --configuration $(buildConfiguration) --logger trx --collect "Code coverage" --diag:log.txt'
+      publishTestResults: false
+
+  - task: SonarQubeAnalyze@4
+    displayName: "Run Code Analysis"
+
+  - task: SonarQubePublish@4
+    displayName: "Publish Analysis Result"

@@ -1,0 +1,48 @@
+name: 1.0.0$(rev:.r)
+
+resources:
+  - repo: self
+
+parameters:
+  - name: sonarProjectName    
+    type: string
+
+  - name: projectName
+    type: string
+
+  - name: buildPlatform
+    type: string
+    default: any cpu
+
+  - name: buildConfiguration
+    type: string
+    default: release
+
+  - name: solutionPath
+    type: string
+    default: "**/*.sln"
+
+jobs:
+  - job:
+    displayName: Build
+
+    variables:
+      slnFileName: ${{ parameters.projectName }}.sln
+
+    pool:
+      vmImage: 'ubuntu-latest'
+      demands:
+        - msbuild
+        - visualstudio
+        - DotNetFramework
+        - vstest
+        - java
+
+    steps:
+      - template: steps/build-and-test.yaml
+        parameters:
+          sonarProjectName: ${{ parameters.sonarProjectName }}
+          slnFileName: $(slnFileName)
+          buildPlatform: ${{ parameters.buildPlatform }}
+          buildConfiguration: ${{ parameters.buildConfiguration }}
+          solutionPath: ${{ parameters.solutionPath }}
